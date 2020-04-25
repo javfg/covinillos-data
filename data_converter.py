@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import json
+import sys
 
 import pandas as pd
 
@@ -9,7 +10,7 @@ import pandas as pd
 coord_cols = ["Lat", "Long"]
 location_cols = ["Province/State", "Country/Region"]
 
-covid_root_path = "/home/javilol/learn/d3/covid"
+covid_root_path = sys.argv[1]
 covid_timeseries_path = f"{covid_root_path}/COVID-19/csse_covid_19_data/csse_covid_19_time_series/"
 
 
