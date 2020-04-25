@@ -39,6 +39,9 @@ def sort_descending(df, col):
 
 
 def fix_spanish_data():
+    confirmed_total.loc['Spain']['2020-03-12'] = 3087
+    deaths_total.loc['Spain']['2020-03-12'] = 84
+
     confirmed_total.loc['Spain']['2020-04-15'] = 177633
     deaths_total.loc['Spain']['2020-04-15'] = 18579
 
@@ -94,8 +97,23 @@ for country in country_order:
             'events': events.loc[(events.country == country) & (events.date == date)][['description', 'group', 'reference']].to_dict(orient="records")
         })
 
+
+smallDataSet = {}
+
+for (country, data) in dataset.items():
+    smallDataSet[country] = []
+
+    for (index, day) in enumerate(data):
+        smallDataSet[country].append({
+            'date': day['date'],
+            'data': [val for (key, val) in day.items() if key not in ['date', 'events']]
+        })
+
+        if len(day['events']):
+            smallDataSet[country][index]['events'] = day['events']
+
 with open(f"{covid_root_path}/covinillos-data/data/dataset.json", "w") as data_file:
-    json.dump(dataset, data_file)
+    json.dump(smallDataSet, data_file)
 
 
 events_dict = events.to_dict(orient="records")
