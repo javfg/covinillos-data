@@ -14,13 +14,13 @@ recovered_jhu_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/m
 events_url = "https://raw.githubusercontent.com/javfg/covinillos-data/master/events.csv"
 
 
-# Get data
+print("[data converter] getting data")
 data = pd.read_csv(data_url).fillna(0)
 recovered_data = pd.read_csv(recovered_jhu_url)
 events = pd.read_csv(events_url)
 
 
-# Fix JHU recovered data
+print("[data converter] fixing jhu recovered data")
 # fill N/As, remove geo coordinates columns, aggregate by country
 recovered_total = recovered_data.fillna(0).drop(['Lat', 'Long'], axis=1).groupby("Country/Region").sum()
 
@@ -45,7 +45,7 @@ def goz(df, country, date):
     return result
 
 
-# Prepare data
+print("[data converter] preparing data")
 dataset = {}
 
 for country in list(data['location'].unique()):
@@ -74,7 +74,7 @@ for country in list(data['location'].unique()):
         })
 
 
-# Reduce size
+print("[data converter] reducing size")
 small_dataset = {}
 
 for (country, data) in dataset.items():
@@ -90,9 +90,11 @@ for (country, data) in dataset.items():
             small_dataset[country][index]['events'] = day['events']
 
 
-# Save data
+print("[data converter] saving data")
 with open(f"./data/dataset.json", "w") as data_file:
     json.dump(small_dataset, data_file)
 
 with open(f"./data/events.json", "w") as events_file:
     json.dump(events.to_dict(orient="records"), events_file)
+
+print("[data converter] DONE!")
