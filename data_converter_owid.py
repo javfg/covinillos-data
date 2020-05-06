@@ -89,6 +89,7 @@ def add_day(day):
     spain.append(day_dict)
 
 spain = []
+data_spain = data_spain.astype({col: 'int' for col in data_spain.columns.drop('date')})
 data_spain.apply(add_day, axis=1);
 dataset['Spain'] = spain
 
