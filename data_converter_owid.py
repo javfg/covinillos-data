@@ -59,6 +59,7 @@ countries = list(data['location'].unique())
 countries.remove('Spain')
 
 
+#TODO: make this the pandas way
 for country in countries:
     dataset[country] = []
 
