@@ -2,7 +2,6 @@
 
 from datetime import datetime
 import json
-import sys
 
 import pandas as pd
 
@@ -10,12 +9,14 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', 10)
 
 data_url = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv"
+data_spain_path = "./spain_timeseries.csv"
 recovered_jhu_url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
 events_url = "https://raw.githubusercontent.com/javfg/covinillos-data/master/events.csv"
 
 
 print("[data converter] getting data")
 data = pd.read_csv(data_url).fillna(0)
+data_spain = pd.read_csv(data_spain_path)
 recovered_data = pd.read_csv(recovered_jhu_url)
 events = pd.read_csv(events_url)
 
@@ -34,7 +35,8 @@ recovered_total = recovered_total.rename(index={'Country/Region': 'location', 'U
 # calculate daily cases
 recovered_daily = recovered_total.diff(axis=1).fillna(recovered_total).clip(lower=0).astype(int)
 
-#get or zero function for JHU data: returns value for a country/date or 0 if non-existant
+
+# get or zero function for JHU data: returns value for a country/date or 0 if non-existant
 def goz(df, country, date):
     result = 0
     try:
@@ -46,9 +48,18 @@ def goz(df, country, date):
 
 
 print("[data converter] preparing data")
-dataset = {}
 
-for country in list(data['location'].unique()):
+# get_events function, gets events for a country/date
+def get_events(country, date):
+    return events.loc[(events.country == country) & (events.date == date)][['description', 'group', 'reference']].to_dict(orient="records")
+
+
+dataset = {}
+countries = list(data['location'].unique())
+countries.remove('Spain')
+
+
+for country in countries:
     dataset[country] = []
 
     for date in list(data.loc[data['location'] == country]['date'].unique()):
@@ -66,12 +77,19 @@ for country in list(data['location'].unique()):
             'confirmed_pm_daily': int(day_data['new_cases_per_million']),
             'deaths_pm_total': int(day_data['total_deaths_per_million']),
             'deaths_pm_daily': int(day_data['new_deaths_per_million']),
-            'tests_total': int(day_data['total_tests']),
-            'tests_daily': int(day_data['new_tests']),
-            'tests_pt_total': int(day_data['total_tests_per_thousand']),
-            'tests_pt_daily': int(day_data['new_tests_per_thousand']),
-            'events': events.loc[(events.country == country) & (events.date == date)][['description', 'group', 'reference']].to_dict(orient="records")
+            'events': get_events(country, date)
         })
+
+# spain data
+print("[data converter] adding spain data")
+def add_day(day):
+    day_dict = day.to_dict()
+    day_dict['events'] = get_events('Spain', day_dict['date'])
+    spain.append(day_dict)
+
+spain = []
+data_spain.apply(add_day, axis=1);
+dataset['Spain'] = spain
 
 
 print("[data converter] reducing size")
